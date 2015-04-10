@@ -3,11 +3,11 @@ require 'spec_helper'
 RSpec.describe Yotsuba do
 
   it 'has a version number' do
-    expect(Yotsuba::VERSION).to_not be nil
+    expect(Yotsuba::VERSION).to_not be_nil
   end
 
   it 'has a Serial number defined' do
-    expect(Yotsuba::Serial).to_not be nil
+    expect(Yotsuba::Serial).to_not be_nil, ->{ "Yotsuba::Serial is undefined. Make sure that the environment variable $DOMDOM_KEY is set." }
   end
 
   it 'can connect to the WSDL' do
@@ -68,6 +68,11 @@ RSpec.describe "Yotsuba::Anime Instance" do
 
 
   it 'can get files' do
+    expect(anime.files).to_not be_empty
+  end
+
+  it 'can get files when it only has one file' do
+    anime = Yotsuba::Anime["5 Centimeters per Second"]
     expect(anime.files).to_not be_empty
   end
 
