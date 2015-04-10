@@ -48,7 +48,6 @@ anime.title # => "Some Anime"
 anime.num_files # 24
 # Note that anime.files requests file info from the server, but anime.num_files does not, so it's faster than anime.files.length
 
-:id, :name, :size, :first_downloaded, :times_downloaded, :anime_id
 episode = anime.files.first
 episode.id # => 1234
 episode.name # => "[Coolsubs] Some Anime Episode 01 [12B4D2].mp4"
