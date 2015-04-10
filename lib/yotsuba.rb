@@ -112,6 +112,7 @@ module Yotsuba
     response = @client.call(:get_list_episode, message: { animeTitle: anime.title, serial: Serial })
     files = response.body[:get_list_episode_response][:get_list_episode_result][:episode_file]
     results = []
+    files = [files] unless files.is_a?(Array)
     files.each do |f|
       results << File.new({
         id: f[:id].to_i,
