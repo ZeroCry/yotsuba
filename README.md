@@ -1,4 +1,4 @@
-# Yotsuba
+# Yotsuba  [![Gem Version](https://img.shields.io/gem/v/yotsuba.svg?style=flat-square)](https://rubygems.org/gems/yotsuba) [![Total number of downloads](https://img.shields.io/gem/dt/yotsuba.svg?style=flat-square)](https://rubygems.org/gems/yotsuba)
 
 Yotsuba facilitates getting download links from the DomDomSoft Anime Downloader server.
 
