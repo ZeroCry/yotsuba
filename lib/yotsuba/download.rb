@@ -7,20 +7,22 @@ module Yotsuba
   class Download
     include Concurrent::Async
 
-    attr_reader :part_links, :link, :status
+    attr_reader :status
 
     def initialize(options = {filename: nil, link: nil, part_links: nil, output_dir: nil })
       @filename = options[:filename]
       @link = options[:link]
       @part_links = options[:part_links]
-      @output_dir = File.absolute_path(options[:output_dir])
+      @output_dir = File.absolute_path(options[:output_dir]) if options[:output_dir]
       @status = "Queued"
 
-      if @part_links.length == 1
+      @output_dir ||= "."
+
+      if @link.nil? && @part_links && @part_links.length == 1
         @link = @part_links.first
         @part_links = nil
       end
-      init_mutex
+      init_mutex # Required by Concurrent::Async
     end
 
     def run
@@ -35,12 +37,17 @@ module Yotsuba
 
       if @part_links
         @part_links.each do |link|
-          create_request(link,true).run
+          create_request(link).run
         end
         finish_request
       elsif @link
         create_request(@link).run
+        finish_request
       end
+    end
+
+    def run_async
+      self.async.run
     end
 
     def delete
@@ -53,7 +60,7 @@ module Yotsuba
 
     private
 
-      def create_request(link, multi=nil)
+      def create_request(link)
         @status = "Downloading..."
         @file_handle ||= File.new(@path, 'ab', 0644)
 
@@ -65,11 +72,6 @@ module Yotsuba
         end
         request.on_body do |chunk|
           @file_handle.write(chunk)
-        end
-        unless multi
-          request.on_complete do |response|
-            finish_request
-          end
         end
         return request
       end
