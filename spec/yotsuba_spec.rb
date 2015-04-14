@@ -94,7 +94,7 @@ RSpec.describe "Yotsuba::Anime Instance" do
 
 end
 
-RSpec.describe Yotsuba::File do
+RSpec.describe Yotsuba::AnimeFile do
 
   let(:file){ Yotsuba::Anime.all.first.files.first }
 
@@ -121,4 +121,17 @@ RSpec.describe Yotsuba::File do
       expect(link.is_a?(String)).to eq(true)
     end
   end
+end
+
+RSpec.describe Yotsuba::Download do
+
+  subject(:download){ Yotsuba::Download.new(filename: "test.txt", link: "http://www.google.com", part_links: nil, output_dir: 'tmp') }
+
+  it { should respond_to :run }
+  it { should respond_to :bytes_downloaded }
+  it { should respond_to :status }
+  it { should respond_to :delete }
+
+  # todo: actually useful download specs
+
 end
