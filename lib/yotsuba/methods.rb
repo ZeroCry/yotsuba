@@ -26,7 +26,7 @@ module Yotsuba
     results = []
     files = [files] unless files.is_a?(Array)
     files.each do |f|
-      results << File.new({
+      results << AnimeFile.new({
         id: f[:id].to_i,
         name: f[:name],
         size: f[:file_size].to_i,

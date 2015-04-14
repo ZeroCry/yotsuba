@@ -1,5 +1,5 @@
 module Yotsuba
-  class File
+  class AnimeFile
 
     attr_reader :id, :name, :size, :first_downloaded, :times_downloaded, :anime_id
 
@@ -19,6 +19,10 @@ module Yotsuba
 
     def download_links
       @download_links ||= Yotsuba.get_download_links(self)
+    end
+
+    def download(output_dir)
+      Download.new(filename: self.name, part_links: self.download_links, output_dir: output_dir)
     end
 
   end
