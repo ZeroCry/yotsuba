@@ -29,7 +29,7 @@ module Yotsuba
     end
 
     def run
-      @path = @multiple ? File.join(@output_dir, @filename+".zip") : @path = File.join(@output_dir, @filename)
+      @path = @multiple ? File.join(@output_dir, @file.name+".zip") : @path = File.join(@output_dir, @file.name)
 
       FileUtils.mkdir_p @output_dir
 
@@ -48,8 +48,16 @@ module Yotsuba
       self.async.run
     end
 
+    def abort
+      finish_request
+      @status = "Aborted"
+    end
+
     def delete
+      abort if @status != "Aborted"
       File.delete(@path) if @path
+      @@all_downloads -= [self]
+      return true
     end
 
     def bytes_written
@@ -81,6 +89,7 @@ module Yotsuba
 
         return match if match
       end
+      return nil
     end
 
     def self.find(id)
