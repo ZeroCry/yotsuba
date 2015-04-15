@@ -1,5 +1,7 @@
 require 'spec_helper'
 
+# todo: use mocks everywhere
+
 RSpec.describe Yotsuba do
 
   it 'has a version number' do
@@ -37,7 +39,7 @@ RSpec.describe "Yotsuba::Anime Class" do
     }.to([])
   end
 
-  it "gives a non-empty array from #all" do
+  it "returns a non-empty array from all" do
     expect(Yotsuba::Anime.all).to_not be_empty
   end
 
@@ -92,6 +94,8 @@ RSpec.describe "Yotsuba::Anime Instance" do
     }
   end
 
+  # todo: test find, find_by
+
 end
 
 RSpec.describe Yotsuba::AnimeFile do
@@ -125,13 +129,67 @@ end
 
 RSpec.describe Yotsuba::Download do
 
-  subject(:download){ Yotsuba::Download.new(filename: "test.txt", link: "http://www.google.com", part_links: nil, output_dir: 'tmp') }
+  it "returns an array from all" do
+    expect(Yotsuba::Download.all.is_a?(Array)).to eq(true)
+  end
 
-  it { should respond_to :run }
-  it { should respond_to :bytes_downloaded }
-  it { should respond_to :status }
-  it { should respond_to :delete }
+  context "after creating two downloads" do
 
-  # todo: actually useful download specs
+    before do
+      @anime ||= Yotsuba::Anime.all.first
+      @first_download ||= @anime.files.first.download('tmp')
+      @second_download ||= @anime.files.first.download('tmp')
+    end
+
+    it "returns an array including the first of those downloads from all" do
+      expect(Yotsuba::Download.all).to include(@first_download)
+    end
+
+    it "returns an array including the first of those downloads from all" do
+      expect(Yotsuba::Download.all).to include(@second_download)
+    end
+
+  end
+
+  # todo: test find, find_by, and []
+
+end
+
+RSpec.describe "Yotsuba::Download Instance" do
+
+  # todo: better download specs
+
+  let(:file){ Yotsuba::Anime["Sword Art Online"].files.last } # 33MB File
+  subject(:download){ file.download('tmp') }
+
+  it { should be_valid }
+
+  it "starts out with a bytes_written of 0" do
+    expect(download.bytes_written).to eq(0)
+  end
+
+  it "starts out with a percent_downloaded of 0" do
+    expect(download.percent_downloaded).to eq(0)
+  end
+
+  it "starts out with a status of 'Queued'" do
+    expect(download.status).to eq('Queued')
+  end
+
+  it "has a matching file as its parent file" do
+    expect(download.file).to eq(file)
+  end
+
+  context "without any initial values" do
+
+    subject(:download){ Yotsuba::Download.new() }
+
+    it { should_not be_valid }
+
+    it "should not have been added to the all downloads list" do
+      expect(Yotsuba::Download.all).to_not include(download)
+    end
+
+  end
 
 end

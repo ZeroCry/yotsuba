@@ -25,36 +25,48 @@ module Yotsuba
     end
 
     def self.all
-      Yotsuba.get_animes if @@all_animes.length == 0
+      precache_animes
       @@all_animes
     end
 
     def self.[](key)
-      Yotsuba.get_animes if @@all_animes.length == 0
-      results = []
-      single = false
+      return Anime.find_by(title: key) if key.is_a?(String)
+      return Anime.find_by(id: key) if key.is_a?(Fixnum)
+      return Anime.search(key) if key.is_a?(Regexp)
 
-      search = Proc.new { |a|
-        single = true
-        results << a if a.title == key
-      } if key.is_a?(String)
-
-      search = Proc.new { |a|
-        single = true
-        results << a if a.id == key
-      } if key.is_a?(Fixnum)
-
-      search = Proc.new { |a|
-        single = false
-        results << a if a.title.match(key)
-      } if key.is_a?(Regexp)
-
-      raise(ArgumentError, "Argument should be a String (title), Fixnum (id), or Regexp (matches title).") if search.nil?
-
-      @@all_animes.each &search
-      return single ? results[0] : results
-
+      raise(ArgumentError, "Argument should be a String (title), Fixnum (id), or Regexp (matches title).")
     end
+
+    def self.find_by(hash = {title: nil, id: nil})
+      precache_animes
+      @@all_animes.each do |anime|
+        match = check_property(anime, :id, hash) || check_property(anime, :title, hash)
+        return match if match
+      end
+    end
+
+    def self.find(id)
+      Anime.find_by(id: id)
+    end
+
+    def self.search(regexp)
+      precache_animes
+      results = []
+      @@all_animes.each do |anime|
+        results << anime if anime.title.match(regexp)
+      end
+      return results
+    end
+
+    private
+
+      def self.precache_animes
+        Yotsuba.get_animes if @@all_animes.length == 0
+      end
+
+      def self.check_property(object, symbol, hash)
+        hash[symbol] && object.respond_to?(symbol) && object.send(symbol) == hash[symbol] ? object : nil
+      end
 
   end
 end

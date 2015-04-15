@@ -22,7 +22,15 @@ module Yotsuba
     end
 
     def download(output_dir)
-      Download.new(filename: self.name, part_links: self.download_links, output_dir: output_dir)
+      @download ||= Download.new(animefile: self, output_dir: output_dir)
+    end
+
+    def ==(other_file)
+      other_file && self.id == other_file.id
+    end
+
+    def eq(other_file)
+      self == other_file
     end
 
   end

@@ -7,27 +7,30 @@ module Yotsuba
   class Download
     include Concurrent::Async
 
-    attr_reader :status
+    @@all_downloads = []
 
-    def initialize(options = {filename: nil, link: nil, part_links: nil, output_dir: nil })
-      @filename = options[:filename]
-      @link = options[:link]
-      @part_links = options[:part_links]
-      @output_dir = File.absolute_path(options[:output_dir]) if options[:output_dir]
+    attr_reader :status, :file, :id
+
+    def initialize(options = {animefile: nil, output_dir: "." })
+      @file = options[:animefile]
+      @output_dir = File.absolute_path(options[:output_dir])
+      @multiple = (@file.download_links.length > 1) if @file
       @status = "Queued"
-
-      @output_dir ||= "."
-
-      if @link.nil? && @part_links && @part_links.length == 1
-        @link = @part_links.first
-        @part_links = nil
+      if self.valid?
+        @id = @@all_downloads.length + 1
+        @@all_downloads << self if self.valid?
       end
+
       init_mutex # Required by Concurrent::Async
     end
 
+    def valid?
+      self.file != nil
+    end
+
     def run
-      @path = File.join(@output_dir, @filename) if @link
-      @path = File.join(@output_dir, @filename+".zip") if @part_links
+      @path = @multiple ? File.join(@output_dir, @filename+".zip") : @path = File.join(@output_dir, @filename)
+
       FileUtils.mkdir_p @output_dir
 
       if File.exists? @path
@@ -35,15 +38,10 @@ module Yotsuba
         return
       end
 
-      if @part_links
-        @part_links.each do |link|
-          create_request(link).run
-        end
-        finish_request
-      elsif @link
-        create_request(@link).run
-        finish_request
+      @file.download_links.each do |link|
+        create_request(link).run
       end
+      finish_request
     end
 
     def run_async
@@ -54,8 +52,39 @@ module Yotsuba
       File.delete(@path) if @path
     end
 
-    def bytes_downloaded
+    def bytes_written
       @path ? File.size(@path) : 0
+    end
+
+    def percent_downloaded
+      100.0 * self.bytes_written / self.file.size
+    end
+
+    def self.all
+      @@all_downloads
+    end
+
+    def self.[](key)
+      return self.find_by(id: key) if key.is_a?(Fixnum)
+      return self.find_by(file: key) if key.is_a?(AnimeFile)
+      return self.find_by(filename: key) if key.is_a?(String)
+      return self.find_by
+    end
+
+    def self.find_by(hash = {id: nil, file: nil, filename: nil, status: nil, percent_downloaded: nil})
+      @@all_downloads.each do |download|
+        match = check_property(download, :id, hash) ||
+        check_property(download, :file, hash) ||
+        check_property(download, :filename, hash) ||
+        check_property(download, :status, hash) ||
+        check_property(download, :percent_downloaded, hash)
+
+        return match if match
+      end
+    end
+
+    def self.find(id)
+      return Download.find_by(id: id)
     end
 
     private
@@ -79,6 +108,10 @@ module Yotsuba
       def finish_request
         @status = "Complete"
         @file_handle.close
+      end
+
+      def check_property(object, symbol, hash)
+        hash[symbol] && object.respond_to?(symbol) && object.send(symbol) == hash[symbol] ? object : nil
       end
 
   end
