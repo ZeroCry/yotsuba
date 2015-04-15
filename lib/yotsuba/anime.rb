@@ -43,6 +43,7 @@ module Yotsuba
         match = check_property(anime, :id, hash) || check_property(anime, :title, hash)
         return match if match
       end
+      return nil
     end
 
     def self.find(id)
