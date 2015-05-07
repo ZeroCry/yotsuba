@@ -1,13 +1,6 @@
-require 'typhoeus'
-require 'fileutils'
-require 'concurrent'
-
 module Yotsuba
-
   class Download
     include Concurrent::Async
-
-    @@all_downloads = []
 
     attr_reader :status, :file, :id
 
@@ -16,16 +9,8 @@ module Yotsuba
       @output_dir = File.absolute_path(options[:output_dir])
       @multiple = (@file.download_links.length > 1) if @file
       @status = "Queued"
-      if self.valid?
-        @id = @@all_downloads.length + 1
-        @@all_downloads << self if self.valid?
-      end
 
       init_mutex # Required by Concurrent::Async
-    end
-
-    def valid?
-      self.file != nil
     end
 
     def run
@@ -56,7 +41,6 @@ module Yotsuba
     def delete
       abort if @status != "Aborted"
       File.delete(@path) if @path
-      @@all_downloads -= [self]
       return true
     end
 
@@ -66,34 +50,6 @@ module Yotsuba
 
     def percent_downloaded
       100.0 * self.bytes_written / self.file.size
-    end
-
-    def self.all
-      @@all_downloads
-    end
-
-    def self.[](key)
-      return self.find_by(id: key) if key.is_a?(Fixnum)
-      return self.find_by(file: key) if key.is_a?(AnimeFile)
-      return self.find_by(filename: key) if key.is_a?(String)
-      return self.find_by
-    end
-
-    def self.find_by(hash = {id: nil, file: nil, filename: nil, status: nil, percent_downloaded: nil})
-      @@all_downloads.each do |download|
-        match = check_property(download, :id, hash) ||
-        check_property(download, :file, hash) ||
-        check_property(download, :filename, hash) ||
-        check_property(download, :status, hash) ||
-        check_property(download, :percent_downloaded, hash)
-
-        return match if match
-      end
-      return nil
-    end
-
-    def self.find(id)
-      return Download.find_by(id: id)
     end
 
     private
@@ -117,10 +73,6 @@ module Yotsuba
       def finish_request
         @status = "Complete"
         @file_handle.close
-      end
-
-      def check_property(object, symbol, hash)
-        hash[symbol] && object.respond_to?(symbol) && object.send(symbol) == hash[symbol] ? object : nil
       end
 
   end
