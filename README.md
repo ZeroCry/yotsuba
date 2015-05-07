@@ -22,6 +22,8 @@ Or install it yourself as:
 
 Quick Start
 
+_Warning: This documentation was written for v0.4.0 and has not yet been updated._
+
     $ export DOMDOM_KEY='your-domdom-key-goes-here'
 
 ```ruby
